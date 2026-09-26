@@ -15,12 +15,6 @@ NC=$(find iceraven-patched \
 if [ -n "$NC" ]; then
   sed -i \
     `# VioletDesaturated Spectrum` \
-    -e 's/fff2f0f8/ff1d1b1f/g' \
-    -e 's/b2f2f0f8/801d1b1f/g' \
-    -e 's/ffe2dcf2/ff1d1b1f/g' \
-    -e 's/ffcac1e4/ff1d1b1f/g' \
-    -e 's/ffb0a3d2/ff1d1b1f/g' \
-    -e 's/8cb0a3d2/801d1b1f/g' \
     -e 's/ff9484bd/ff1d1b1f/g' \
     -e 's/ff75669f/ff1d1b1f/g' \
     -e 's/db75669f/801d1b1f/g' \
