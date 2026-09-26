@@ -33,17 +33,30 @@ jobs:
           latest: true
           doNotFailIfNotFound: true
 
+      - name: Check version difference
+        id: version_check
+        run: |
+          UPSTREAM_TAG="${{ steps.get_upstream_release.outputs.tag_name }}"
+          THIS_TAG="${{ steps.this_repo_release.outputs.tag_name }}"
+
+          echo "Upstream version: $UPSTREAM_TAG"
+          echo "Current release version: $THIS_TAG"
+
+          if [ "$UPSTREAM_TAG" != "$THIS_TAG" ]; then
+            echo "NEW_VERSION_AVAILABLE=true" >> $GITHUB_OUTPUT
+            echo "UPSTREAM_VERSION=$UPSTREAM_TAG" >> $GITHUB_OUTPUT
+          else
+            echo "NEW_VERSION_AVAILABLE=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Extract Download URL
+        if: steps.version_check.outputs.NEW_VERSION_AVAILABLE == 'true'
+        id: extract_url
         env:
           ASSETS: ${{ steps.get_upstream_release.outputs.assets }}
         run: |
-          DOWNLOAD_URL=$(echo "$ASSETS" | jq -r '.[] | select(.name | contains("arm64") and contains("forkRelease.apk")) | .browser_download_url')
+          DOWNLOAD_URL=$(echo "$ASSETS" | jq -r '.[] | select(.name | contains("arm64")) | .browser_download_url')
           echo "DOWNLOAD_URL=$DOWNLOAD_URL" >> $GITHUB_ENV
-
-      - name: Download Latest APK
-        if: steps.version_check.outputs.NEW_VERSION_AVAILABLE == 'true'
-        run: |
-          wget -q "$DOWNLOAD_URL" -O iceraven.apk
 
       - name: Install Dependencies
         if: steps.version_check.outputs.NEW_VERSION_AVAILABLE == 'true'
@@ -54,7 +67,7 @@ jobs:
       - name: Download Latest APK
         if: steps.version_check.outputs.NEW_VERSION_AVAILABLE == 'true'
         run: |
-          wget -q "${{ steps.version_check.outputs.DOWNLOAD_URL }}" -O iceraven.apk
+          wget -q "$DOWNLOAD_URL" -O iceraven.apk
 
       - name: Run Build Script
         if: steps.version_check.outputs.NEW_VERSION_AVAILABLE == 'true'
