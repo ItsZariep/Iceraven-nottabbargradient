@@ -33,28 +33,17 @@ jobs:
           latest: true
           doNotFailIfNotFound: true
 
-      - name: Check version and extract download URL
-        id: version_check
+      - name: Extract Download URL
+        env:
+          ASSETS: ${{ steps.get_upstream_release.outputs.assets }}
         run: |
-          UPSTREAM_VERSION="${{ steps.get_upstream_release.outputs.tag_name }}"
-          THIS_REPO_VERSION="${{ steps.this_repo_release.outputs.tag_name }}"
+          DOWNLOAD_URL=$(echo "$ASSETS" | jq -r '.[] | select(.name | contains("arm64") and contains("forkRelease.apk")) | .browser_download_url')
+          echo "DOWNLOAD_URL=$DOWNLOAD_URL" >> $GITHUB_ENV
 
-          echo "Upstream IceRaven version: $UPSTREAM_VERSION"
-          echo "This repository's latest release version: ${THIS_REPO_VERSION:-"No previous release found."}"
-
-          # Extract arm64 forkRelease APK URL from the json outputs
-          DOWNLOAD_URL=$(echo '${{ steps.get_upstream_release.outputs.assets }}' | jq -r '.[] | select(.name | contains("arm64") and contains("forkRelease.apk")) | .browser_download_url')
-
-          echo "DOWNLOAD_URL=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
-          echo "UPSTREAM_VERSION=$UPSTREAM_VERSION" >> $GITHUB_OUTPUT
-
-          if [ "$UPSTREAM_VERSION" != "$THIS_REPO_VERSION" ]; then
-            echo "NEW_VERSION_AVAILABLE=true" >> $GITHUB_OUTPUT
-            echo "New version available! Building and releasing."
-          else
-            echo "NEW_VERSION_AVAILABLE=false" >> $GITHUB_OUTPUT
-            echo "No new version from upstream. Skipping build and release."
-          fi
+      - name: Download Latest APK
+        if: APKue'
+        run: |
+          wget -q "$DOWNLOAD_URL" -O iceraven.apk
 
       - name: Install Dependencies
         if: steps.version_check.outputs.NEW_VERSION_AVAILABLE == 'true'
