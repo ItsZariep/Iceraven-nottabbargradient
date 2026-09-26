@@ -76,9 +76,20 @@ jobs:
       - name: Sign APK
         if: steps.version_check.outputs.NEW_VERSION_AVAILABLE == 'true'
         run: |
-          echo "${{ secrets.KEYSTORE }}" | base64 -di > keystore.jks
-          apksigner sign --ks keystore.jks --ks-pass pass:${{ secrets.KEYSTORE_PASSPHRASE }} --key-pass pass:${{ secrets.KEY_PASSWORD }} iceraven-patched-signed.apk
+          echo "${{ secrets.KEYSTORE }}" | base64 -d > keystore.jks
+          
+          if [ ! -s keystore.jks ]; then
+            echo "Error: KEYSTORE secret is empty or failed to decode!"
+            exit 1
+          fi
 
+          apksigner sign \
+            --ks keystore.jks \
+            --ks-pass pass:${{ secrets.KEYSTORE_PASSPHRASE }} \
+            --key-pass pass:${{ secrets.KEY_PASSWORD }} \
+            --ks-key-alias iceraven-key \
+            iceraven-patched-signed.apk
+            
       - name: Upload APK as Artifact
         if: steps.version_check.outputs.NEW_VERSION_AVAILABLE == 'true'
         uses: actions/upload-artifact@v4
