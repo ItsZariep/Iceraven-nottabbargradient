@@ -32,18 +32,6 @@ if [ -n "$NC" ]; then
     -e 's/66180e30/801d1b1f/g' \
     -e 's/80180e30/801d1b1f/g' \
     -e 's/b2180e30/801d1b1f/g' \
-    `# Violet Spectrum` \
-    -e 's/fff5ecff/ff1d1b1f/g' \
-    -e 's/ffe5d6ff/ff1d1b1f/g' \
-    -e 's/80e5d6ff/801d1b1f/g' \
-    -e 's/ffcdb7ff/ff1d1b1f/g' \
-    -e 's/ffb393ff/ff1d1b1f/g' \
-    -e 's/ff956eff/ff1d1b1f/g' \
-    -e 's/ff764edd/ff1d1b1f/g' \
-    -e 's/ff5939a8/ff1d1b1f/g' \
-    -e 's/ff3e2976/ff1d1b1f/g' \
-    -e 's/ff271c48/ff1d1b1f/g' \
-    -e 's/ff161423/ff1d1b1f/g' \
     `# Purple Spectrum` \
     -e 's/fffaebff/ff1d1b1f/g' \
     -e 's/fff1d0ff/ff1d1b1f/g' \
