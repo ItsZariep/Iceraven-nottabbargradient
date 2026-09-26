@@ -1,50 +1,87 @@
 #!/bin/bash
 set -e
 
-# Decompile with Apktool
+# Decompile with Apktool (decode resources + classes)
 wget -q https://github.com/iBotPeaches/Apktool/releases/download/v2.11.0/apktool_2.11.0.jar -O apktool.jar
 java -jar apktool.jar d iceraven.apk -o iceraven-patched
 rm -rf iceraven-patched/META-INF
 
-NC=$(find iceraven-patched \
-  -path '*/mozilla/components/ui/colors/NovaColors.smali' \
-  | head -n1)
+# ---- Color patching ----
 
+# Legacy XML views (toolbar/webview chrome)
+COLORS=iceraven-patched/res/values-night/colors.xml
+if [ -f "$COLORS" ]; then
+  sed -i 's/<color name="fx_mobile_surface">.*/<color name="fx_mobile_surface">#ff1d1b1f<\/color>/g' "$COLORS"
+  sed -i 's/<color name="fx_mobile_background">.*/<color name="fx_mobile_background">#ff1d1b1f<\/color>/g' "$COLORS"
+  sed -i 's/<color name="fx_mobile_layer_color_2">.*/<color name="fx_mobile_layer_color_2">@color\/photonDarkGrey90<\/color>/g' "$COLORS"
+  echo "[OLED] values-night/colors.xml patched"
+fi
+
+# PhotonColors.smali: DarkGrey90 #15141A -> dark surface
+PH=$(find iceraven-patched -path '*/mozilla/components/ui/colors/PhotonColors.smali' | head -n1)
+if [ -n "$PH" ]; then
+  sed -i 's/ff15141a/ff1d1b1f/g' "$PH"
+  echo "[OLED] PhotonColors patched: $PH"
+fi
+
+# NovaColors.smali: new dark surfaces (Gray65/70/80/85) -> black
+NC=$(find iceraven-patched -path '*/mozilla/components/ui/colors/NovaColors.smali' | head -n1)
 if [ -n "$NC" ]; then
-  sed -i \
-    -e 's/ff1a1526/ff1d1b1f/g' \
-    -e 's/ff281d44/ff1d1b1f/g' \
-    -e 's/ff3e315f/ff1d1b1f/g' \
-    -e 's/ff584a7d/ff1d1b1f/g' \
-    -e 's/ff3e2976/ff1d1b1f/g' \
-    -e 's/ff5939a8/ff1d1b1f/g' \
-    -e 's/80711d08/ff1d1b1f/g' \
-    "$NC"
-
-else
-  echo "NovaColors.smali not found"
+  sed -i 's/ff312f33/ff1d1b1f/g; s/ff252428/ff1d1b1f/g; s/ff171519/ff1d1b1f/g; s/ff131215/ff1d1b1f/g' "$NC"
+  echo "[OLED] NovaColors dark surfaces -> black"
 fi
 
-AC=$(find iceraven-patched \
-  -path '*/mozilla/components/compose/base/theme/AcornColorsKt.smali' \
-  | head -n1)
+# ============================================================
+# PRIVATE / INCOGNITO OLED 
+# ============================================================
 
+# 1) fx_mobile_private_surface -> black
+#    Private window background + status bar (the huge solid
+#    #180E30 region) via HomepageEdgeToEdgeFeature.
+for C in iceraven-patched/res/values/colors.xml iceraven-patched/res/values-night/colors.xml; do
+  if [ -f "$C" ]; then
+    sed -i 's/<color name="fx_mobile_private_surface">.*/<color name="fx_mobile_private_surface">#ff1d1b1f<\/color>/g' "$C"
+    echo "[OLED] $C: fx_mobile_private_surface -> black"
+  fi
+done
+
+# 2) NovaColors dark-violet family -> black
+#    Private scheme surfaces: toolbar #281D44=VioletDesaturated80,
+#    home #180E30=VioletDesaturated90, all fields NUCLEAR blackens.
+if [ -n "$NC" ]; then
+  sed -i 's/ff180e30/ff1d1b1f/g; s/ff281d44/ff1d1b1f/g; s/ff3e315f/ff1d1b1f/g; s/ff584a7d/ff1d1b1f/g; s/ff3e2976/ff1d1b1f/g; s/ff5939a8/ff1d1b1f/g; s/80180e30/ff1d1b1f/g; s/b2180e30/ff1d1b1f/g; s/80711d08/ff1d1b1f/g' "$NC"
+  echo "[OLED] NovaColors violet family -> black"
+fi
+
+# 3) AcornColorsKt private palette + private scheme inline colors -> black
+#    #11042B = private layerGradientStart + surfaceContainer color,
+#    #20163A / #0D0321 = private scheme surfaces.
+AC=$(find iceraven-patched -path '*/mozilla/components/compose/base/theme/AcornColorsKt.smali' | head -n1)
 if [ -n "$AC" ]; then
-  sed -i \
-    -e 's/0xff11042b/0xff1d1b1f/g' \
-    -e 's/0xff20163a/0xff1d1b1f/g' \
-    -e 's/0xff0d0321/0xff1d1b1f/g' \
-    -e 's/0xff1a1526/0xff1d1b1f/g' \
-    "$AC"
-
-else
-  echo "AcornColorsKt.smali not found"
+  sed -i 's/0xff11042b/0xff1d1b1f/g; s/0xff20163a/0xff1d1b1f/g; s/0xff0d0321/0xff1d1b1f/g' "$AC"
+  echo "[OLED] AcornColorsKt private colors -> black"
 fi
+
+# ============================================================
+# END private / incognito OLED
+# ============================================================
+
+# M3 dark defaults: Background/Surface/SurfaceDim (PaletteTokens.Neutral6) -> black
+CDT=$(find iceraven-patched -path '*/androidx/compose/material3/tokens/ColorDarkTokens.smali' | head -n1)
+if [ -n "$CDT" ]; then
+  sed -i 's#sget-wide v0, Landroidx/compose/material3/tokens/PaletteTokens;->Neutral6:J#const-wide v0, 0xff1d1b1fL#' "$CDT"
+  echo "[OLED] ColorDarkTokens patched (M3 background/surface)"
+fi
+
+# GeckoView loading/cover background (#2A2A2E -> black)
+find iceraven-patched -path '*/org/mozilla/geckoview/GeckoView.smali' -exec sed -i 's/-0xd5d5d2/-0x11d1b1f/g' {} +
+find iceraven-patched -path '*/mozilla/components/browser/engine/gecko/GeckoEngineView.smali' -exec sed -i 's/-0xd5d5d2/-0x11d1b1f/g' {} +
+echo "[OLED] GeckoView loading background -> black"
 
 # Recompile the APK
 java -jar apktool.jar b iceraven-patched -o iceraven-patched.apk --use-aapt2
 
-# Align the APK
+# Align the APK (signing happens in the workflow with the release keystore)
 zipalign -f 4 iceraven-patched.apk iceraven-patched-signed.apk
 
 # Clean up
