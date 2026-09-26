@@ -10,8 +10,12 @@ NC=$(find iceraven-patched \
   -path '*/mozilla/components/ui/colors/NovaColors.smali' \
   | head -n1)
 
+# Source: https://github.com/akliuxingyuan/android-components/blob/437b3596289fa012aed066840c31e8fc0c8bc7a7/components/ui/colors/src/main/java/mozilla/components/ui/colors/NovaColors.kt
+
 if [ -n "$NC" ]; then
   sed -i \
+    -e 's/ff1a1526/ff1d1b1f/g' \
+    -e 's/ff180e30/ff1d1b1f/g' \
     -e 's/ff281d44/ff1d1b1f/g' \
     -e 's/ff3e2976/ff1d1b1f/g' \
     -e 's/80711d08/ff1d1b1f/g' \
