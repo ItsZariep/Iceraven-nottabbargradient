@@ -19,9 +19,10 @@ jobs:
       - name: Get latest release info from this repo
         id: this_repo_latest_release
         uses: cardinalby/git-get-release-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
         with:
           latest: true
-          repo_token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
       # ----------------------------------------------------
 
       - name: Install Dependencies
