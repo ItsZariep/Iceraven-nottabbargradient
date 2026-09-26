@@ -32,17 +32,6 @@ if [ -n "$NC" ]; then
     -e 's/66180e30/801d1b1f/g' \
     -e 's/80180e30/801d1b1f/g' \
     -e 's/b2180e30/801d1b1f/g' \
-    `# Purple Spectrum` \
-    -e 's/fffaebff/ff1d1b1f/g' \
-    -e 's/fff1d0ff/ff1d1b1f/g' \
-    -e 's/ffe1afff/ff1d1b1f/g' \
-    -e 's/ffcd89fc/ff1d1b1f/g' \
-    -e 's/ffb561eb/ff1d1b1f/g' \
-    -e 's/ff9540c8/ff1d1b1f/g' \
-    -e 's/ff702e98/ff1d1b1f/g' \
-    -e 's/ff4f216b/ff1d1b1f/g' \
-    -e 's/ff311842/ff1d1b1f/g' \
-    -e 's/ff1a1220/ff1d1b1f/g' \
     `# Gradient end stop` \
     -e 's/80711d08/801d1b1f/g' \
     "$NC"
