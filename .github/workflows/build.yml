@@ -41,7 +41,7 @@ jobs:
           echo "DOWNLOAD_URL=$DOWNLOAD_URL" >> $GITHUB_ENV
 
       - name: Download Latest APK
-        if: APKue'
+        if: steps.version_check.outputs.NEW_VERSION_AVAILABLE == 'true'
         run: |
           wget -q "$DOWNLOAD_URL" -O iceraven.apk
 
